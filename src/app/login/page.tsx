@@ -1,25 +1,33 @@
 "use client"
 
-import {useState} from "react";
+import React, {useState} from "react";
 import api from "@/lib/axios";
+import axios from "axios";
+import {useRouter} from "next/navigation";
 
 export default function Signup() {
-    const [formData, setFormData] = useState({email:'', password:''});
+    const [formData, setFormData] = useState({email: '', password: ''});
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+    const router = useRouter();
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = e.target;
+        setFormData({...formData, [name]: value});
     };
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLElement>) => {
         e.preventDefault();
         try {
             const response = await api.post('login/', formData);
-            setSuccess('Signup successful!');
+            localStorage.setItem('token', response.data.token);
+            setSuccess('Login successful!');
             setError('');
+            router.push('/dashboard');
         } catch (err) {
-            setError(err.response?.data?.detail || 'Signup failed');
+            if (axios.isAxiosError(err)) {
+                setError(err.response?.data?.message || 'Login failed');
+            }
             console.log(err);
+            setError('Login failed')
         }
     };
 
@@ -50,9 +58,11 @@ export default function Signup() {
                 />
             </div>
 
-            <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blu">Login</button>
-            {success && <p style={{ color: 'green' }}>{success}</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <button type="submit"
+                    className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blu">Login
+            </button>
+            {success && <p style={{color: 'green'}}>{success}</p>}
+            {error && <p style={{color: 'red'}}>{error}</p>}
         </form>
     );
 }
